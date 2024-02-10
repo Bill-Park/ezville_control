@@ -479,12 +479,21 @@ def ezville_loop(config):
                                         await mqtt_discovery(payload)
                                         await asyncio.sleep(DISCOVERY_DELAY)
 
-                                    setT = str(
-                                        int(packet[16 + 4 * rid : 18 + 4 * rid], 16)
+                                    # 정수 단위 값 가져오기, 1~7비트만 사용
+                                    # 8번째 비트가 1이면 0.5 추가
+                                    setT_packet = int(
+                                        packet[16 + 4 * rid : 18 + 4 * rid], 16
                                     )
-                                    curT = str(
-                                        int(packet[18 + 4 * rid : 20 + 4 * rid], 16)
+                                    setT = str(setT_packet % 128)
+                                    if setT_packet // 128:
+                                        setT += ".5"
+
+                                    curT_packet = int(
+                                        packet[18 + 4 * rid : 20 + 4 * rid], 16
                                     )
+                                    curT = str(curT_packet % 128)
+                                    if curT_packet // 128:
+                                        curT += ".5"
 
                                     if onoff_state[8 - rid] == "1":
                                         onoff = "heat"
@@ -494,10 +503,10 @@ def ezville_loop(config):
                                         and away_state[8 - rid] == "1"
                                     ):
                                         onoff = "off"
-                                    #                                    elif onoff_state[8 - rid] == '0' and away_state[8 - rid] == '0':
-                                    #                                        onoff = 'off'
-                                    #                                    else:
-                                    #                                        onoff = 'off'
+                                    # elif onoff_state[8 - rid] == '0' and away_state[8 - rid] == '0':
+                                    #     onoff = 'off'
+                                    # else:
+                                    #     onoff = 'off'
 
                                     await update_state(name, "power", rid, src, onoff)
                                     await update_state(name, "curTemp", rid, src, curT)
